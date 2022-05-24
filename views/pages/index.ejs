@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head.ejs') %>
+</head>
+
+<body>
+    <header>
+        <%- include('../partials/nav.ejs') %>
+    </header>
+    <main class="container">
+        <br>
+        <div class="row" id="col-1">
+            <h1 style="text-align: center;">Available Books</h1>
+            <% let books = JSON.parse(system.books);
+                console.log(books)
+                if (books.length > 0) { 
+                for (let i = 0; i < books.length; i++) { %>
+            <div class="card offset-1" style="width: 18rem;">
+                <img src="/images/<%= books[i].Cover %>" height="256px" width="256px" class="card-img-top" alt="...">
+                <div class="card-body">
+                    <h5 class="card-title"><%= books[i].Title %></h5>
+                    <p class="card-text">Written by <%= books[i].Author %></p>
+                    <p>Genre: <%= books[i].Genre %></p>
+                    <div style="text-align: center;">
+                        <button type="button" class="btn btn-dark" onclick="openModal(<%= books[i].BookID %>)">Rent
+                            out</button>
+                    </div>
+                </div>
+            </div>
+            <% } %>
+            <hr style="margin-top: 2%;">
+            <% } else { %>
+            <%- include('../partials/nullBooks.ejs') %>
+            <% } %>
+        </div>
+        <div class="row" id="col-2">
+            <h1 style="text-align: center;">Rented Books</h1>
+            <% let rented = JSON.parse(system.rented);
+            if (rented.length > 0) {
+                for (let i = 0; i < rented.length; i++) { %>
+            <div class="card offset-1" style="width: 18rem;">
+                <img src="/images/<%= rented[i].Cover %>" height="256px" width="256px" class="card-img-top" alt="...">
+                <div class="card-body">
+                    <h5 class="card-title"><%= rented[i].Title %></h5>
+                    <p class="card-text">Written by <%= rented[i].Author %></p>
+                    <p>Genre: <%= rented[i].Genre %></p>
+                    <div style="text-align: center;">
+                        <button type="button" class="btn btn-info" onclick="openEdit(<%= JSON.stringify(rented[i]) %>)"><i
+                                class='fas fa-edit'></i></button>
+                        <button type="button" class="btn btn-danger" onclick="deleteCard(<%= rented[i].BookID %>)"><i
+                                class='fas fa-trash'></i></button>
+                    </div>
+                </div>
+            </div>
+            <% }
+            } %>
+        </div>
+    </main>
+    <footer>
+        <%- include('../partials/footer.ejs') %>
+    </footer>
+
+    <div class="modal fade" id="rentBook" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="exampleModalLabel">Checkout</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <input type="hidden" name="ID" id="ID">
+                        <% let customers = JSON.parse(system.customers);
+                           if (customers.length > 0) {
+                               for (let i = 0; i < customers.length; i++) { %>
+                        <h4>Select Customer</h4>
+                        <select class="form-control" name="ppl" id="ppl">
+                            <option value="<%= customers[i].CustomerID %>">
+                                <%= customers[i].Name %> <%= customers[i].LastName %></option>
+                        </select>
+                        <div class="row">
+                            <div class="col">
+                                <h4>Checkout Date</h4>
+                                <input class="form-control" type="date" name="checkoutD" id="checkoutD">
+                            </div>
+                            <div class="col">
+                                <h4>Return Date</h4>
+                                <input class="form-control" type="date" name="returnD" id="returnD">
+                            </div>
+                        </div>
+                        <hr>
+                        <div style="text-align: end;">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="checkout()">Finalize
+                                Checkout</button>
+                        </div>
+                        <% }
+                        } else { %>
+                        <%- include('../partials/nullCustomers.ejs') %>
+                        <% } %>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editRental" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="exampleModalLabel">Edit Rental</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <input type="hidden" name="ID2" id="ID2">
+                        <h4>Select Customer</h4>
+                        <select class="form-control" name="ppl2" id="ppl2">
+                            <% for (let i = 0; i < customers.length; i++) { %>
+                            <option value="<%= customers[i].CustomerID %>">
+                                <%= customers[i].Name %> <%= customers[i].LastName %></option>
+                            <% } %>
+                        </select>
+                        <div class="row">
+                            <div class="col">
+                                <h4>Checkout Date</h4>
+                                <input class="form-control" type="date" name="checkoutD2" id="checkoutD2">
+                            </div>
+                            <div class="col">
+                                <h4>Return Date</h4>
+                                <input class="form-control" type="date" name="returnD2" id="returnD2">
+                            </div>
+                        </div>
+                        <hr>
+                        <div style="text-align: end;">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="updateRental()">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let modal = new bootstrap.Modal($('#rentBook'));
+        let modalR = new bootstrap.Modal($('#editRental'));
+
+        function openModal(id) {
+            modal.show();
+            $('#ID').val(id);
+        }
+
+        function checkinps() {
+            if ($('#checkoutD').val() == '' || $('#returnD').val() == '') {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function checkout() {
+            if (checkinps()) {
+                let form = {
+                    CustomerID: $('#ppl').val(),
+                    BookID: $('#ID').val(),
+                    RentalDate: $('#checkoutD').val().split('T')[0],
+                    ReturnDate: $('#returnD').val().split('T')[0],
+                }
+                $.ajax({
+                    type: 'POST',
+                    url: '/add',
+                    data: form,
+                    success: (data, status) => {
+                        modal.hide();
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 120);
+                    }
+                });
+            }
+        }
+
+        function openEdit(r) {
+            modalR.show();
+            $('#ID2').val(r.RentalID);
+        }
+
+        function checkUpdated(id) {
+            if ($('#ppl2').val() == '' || $('#checkoutD2') == '' || $('#returnD2').val() == '') {
+                swal({
+                    title: "Watch Out!",
+                    text: "Fill Out Every Field",
+                    icon: 'error'
+                });
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function updateRental() {
+            if (checkUpdated()) {
+                let form = {
+                    CustomerID: $('#ppl2').val(),
+                    RentalDate: $('#checkoutD2').val(),
+                    ReturnDate: $('#returnD2').val()
+                }
+                let id = $('#ID2').val();
+                $.ajax({
+                    type:'PUT',
+                    url: `/update/${id}`,
+                    data: form,
+                    success: (data, status) => {
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 120);
+                    }
+                })
+            }
+        }
+
+        function deleteCard(id) {
+            $.ajax({
+                type: 'DELETE',
+                url: `/delete/${id}`,
+                success: (data, status) => {
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 120);
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head.ejs') %>
+</head>
+
+<body onload="getCustomers()">
+    <header>
+        <%- include('../partials/nav.ejs') %>
+    </header>
+    <br>
+    <main class="container">
+        <form class="bg-light" id="custom">
+            <h4>Name</h4>
+            <input class="form-control" type="text" name="name" id="name" required>
+            <h4>Last Name</h4>
+            <input class="form-control" type="text" name="last" id="last" required>
+            <h4>Address</h4>
+            <input class="form-control" type="text" name="address" id="address" required>
+            <h4>Phone</h4>
+            <input class="form-control" type="text" name="phone" id="phone" required>
+            <hr>
+            <div style="text-align: end;">
+                <button type="button" class="btn btn-primary" onclick="checkCustomer()">Add Customer</button>
+            </div>
+        </form>
+        <br>
+        <div style="text-align: center;" id="centered">
+            <h1>Customers</h1>
+            <table class="table table-striped table-hover">
+                <thead>
+                    <th>Customer ID</th>
+                    <th>Name</th>
+                    <th>Last Name</th>
+                    <th>Address</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </thead>
+                <tbody id="Cbody"></tbody>
+            </table>
+        </div>
+    </main>
+    <footer>
+        <%- include('../partials/footer.ejs') %>
+    </footer>
+
+    <div class="modal fade" id="editCustomer" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <input type="hidden" name="ID" id="ID">
+                        <h4>Name</h4>
+                        <input class="form-control" type="text" name="ename" id="ename">
+                        <h4>Last Name</h4>
+                        <input class="form-control" type="text" name="elast" id="elast">
+                        <h4>Address</h4>
+                        <input class="form-control" type="text" name="eaddress" id="eaddress">
+                        <h4>Phone</h4>
+                        <input class="form-control" type="text" name="ephone" id="ephone">
+                        <hr>
+                        <div style="text-align: end;">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="updateCustomer()">Save
+                                changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getCustomers() {
+            $.ajax({
+                type: 'GET',
+                url: '/customers/getAll',
+                success: (data, status) => {
+                    if (status === 'success') {
+                        if (data.length > 0) {
+                            printValues(data);
+                        } else {
+                            $('#centered').hide();
+                        }
+                    }
+                }
+            });
+        }
+
+        function printValues(data) {
+            let txt;
+            data.forEach(d => {
+                txt += `<tr>
+                            <td>${d.CustomerID}</td>
+                            <td>${d.Name}</td>
+                            <td>${d.LastName}</td>
+                            <td>${d.Address}</td>
+                            <td>${d.Phone}</td>
+                            <td>                            
+                                <button type="button" class="btn btn-info" onclick='openModal(${JSON.stringify(d)})'><i class='fas fa-edit'></i></button>
+                                <button type="button" class="btn btn-danger onclick="deleteRow(${d.CustomerID})"><i class='fas fa-trash'></i></button>
+                            </td>
+                        </tr>`;
+            });
+            $('#Cbody').html(txt);
+        }
+
+        let modal = new bootstrap.Modal($('#editCustomer'));
+
+        function openModal(d) {
+            modal.show();
+            $('#ID').val(d.CustomerID);
+            $('#ename').val(d.Name);
+            $('#elast').val(d.LastName);
+            $('#eaddress').val(d.Address);
+            $('#ephone').val(d.Phone);
+        }
+
+        function recheck(form) {
+            if (form.Name == '' || form.LastName == '' || form.Address == '' || form.Phone == '') {
+                swal({
+                    title: "Careful!",
+                    text: "Fill Out Every Field",
+                    icon: 'warning'
+                });
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function updateCustomer() {
+            let form = {
+                CustomerID: $('#ID').val(),
+                Name: $('#ename').val(),
+                LastName: $('#elast').val(),
+                Address: $('#eaddress').val(),
+                Phone: $('#ephone').val()
+            }
+            if (recheck(form)) {
+                let id = form.CustomerID;
+                delete form.CustomerID;
+                $.ajax({
+                    type: 'PUT',
+                    url: `/customers/update/${id}`,
+                    data: form,
+                    success: (data, status) => {
+                        setTimeout(() => {
+                            window.location.href = '/customers';
+                        }, 120);
+                    }
+                });
+            }
+        }
+
+        function deleteRow(id) {
+            $.ajax({
+                type: 'DELETE',
+                url: `/customers/delete/${id}`,
+                success: (data, status) => {
+                    setTimeout(() => {
+                        window.location.href = '/customers';
+                    }, 120);
+                }
+            });
+        }
+
+        function checkinput() {
+            if ($('#name').val() == '' || $('#last').val() == '' || $('#address').val() == '' || $('#phone').val() == '') {
+                swal({
+                    title: "Careful!",
+                    text: "Fill Out Every Field",
+                    icon: 'warning'
+                });
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function checkCustomer() {
+            let form = {
+                Name: $('#name').val(),
+                LastName: $('#last').val(),
+                Address: $('#address').val(),
+                Phone: $('#phone').val()
+            }
+            if (checkinput()) {
+                $.ajax({
+                    url: '/customers/getAll',
+                    type: 'GET',
+                    success: (data, status) => {
+                        if (status === 'success') {
+                            let books = JSON.parse(data);
+                            if (books.some(b => { // Full Name Validation
+                                return b.Name == form.Name;
+                            }) && books.some(b => {
+                                return b.LastName == form.LastName;
+                            })) {
+                                swal({
+                                    title: "Hold Up!",
+                                    text: "You cannot save the same person twice",
+                                    icon: 'error'
+                                });
+                            } else {
+                                addCustomer(form);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function addCustomer(form) {
+            $.ajax({
+                type: 'POST',
+                url: '/customers/add',
+                data: form,
+                success: (data, status) => {
+                    if (status === 'success') {
+                        swal({
+                            title: 'Well Done!',
+                            text: 'Customer Added',
+                            icon: 'success'
+                        });
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

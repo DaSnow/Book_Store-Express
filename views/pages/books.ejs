@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head.ejs') %>
+</head>
+
+<body onload="getBooks()">
+    <header>
+        <%- include('../partials/nav.ejs') %>
+    </header>
+    <br>
+    <main class="container">
+        <form class="bg-light" id="custom">
+            <h4>Title</h4>
+            <input class="form-control" type="text" name="title" id="title" required>
+            <h4>Author</h4>
+            <input class="form-control" type="text" name="author" id="author" required>
+            <h4>Cover</h4>
+            <input class="form-control" type="file" name="cover" id="cover" required>
+            <h4>Genre</h4>
+            <input class="form-control" type="text" name="genre" id="genre" required>
+            <hr>
+            <div style="text-align: end;">
+                <button type="button" class="btn btn-primary" onclick="checkBook()">Add Book</button>
+            </div>
+        </form>
+        <br>
+        <div style="text-align: center;" id="centered">
+            <h1>Books</h1>
+            <table class="table table-striped table-hover">
+                <thead>
+                    <th>Book ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Cover</th>
+                    <th>Genre</th>
+                    <th>Actions</th>
+                </thead>
+                <tbody id="Bbody"></tbody>
+            </table>
+        </div>
+    </main>
+    <footer>
+        <%- include('../partials/footer.ejs') %>
+    </footer>
+
+    <div class="modal fade" id="editBook" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit Book</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <input type="hidden" name="ID" id="ID">
+                        <h4>Title</h4>
+                        <input class="form-control" type="text" name="etitle" id="etitle">
+                        <h4>Author</h4>
+                        <input class="form-control" type="text" name="eauthor" id="eauthor">
+                        <h4>Cover</h4>
+                        <p>If you do not want to change the leave this field empty</p>
+                        <input class="form-control" type="file" name="ecover" id="ecover">
+                        <p>Previous Image</p>
+                        <img height="256px" width="256px" src="" alt="" id="image">
+                        <h4>Genre</h4>
+                        <input class="form-control" type="text" name="egenre" id="egenre">
+                        <hr>
+                        <div style="text-align: end;">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="updateBook()">Save
+                                changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getBooks() {
+            $.ajax({
+                type: 'GET',
+                url: '/books/getAll',
+                success: (data, status) => {
+                    if (status === 'success') {
+                        if (data.length > 0) {
+                            $('#centered').show();
+                            printValues(data);
+                        } else {
+                            $('#centered').hide();
+                        }
+                    }
+                }
+            });
+        }
+
+        function printValues(data) {
+            let txt;
+            data.forEach(d => {
+                txt += `<tr>
+                            <td>${d.BookID}</td>
+                            <td>${d.Title}</td>
+                            <td>${d.Author}</td>
+                            <td><img src="images/${d.Cover}" alt="${d.Cover}" height="64px" width="64px"></td>
+                            <td>${d.Genre}</td>
+                            <td>                            
+                                <button type="button" class="btn btn-info" onclick='openModal(${JSON.stringify(d)})'><i class='fas fa-edit'></i></button>
+                                <button type="button" class="btn btn-danger" onclick="deleteRow(${d.BookID}, '${d.Cover}')"><i class='fas fa-trash'></i></button>
+                            </td>
+                        </tr>`;
+            });
+            $('#Bbody').html(txt);
+        }
+
+        let modal = new bootstrap.Modal($('#editBook'));
+
+        function openModal(d) {
+            modal.show();
+            $('#ID').val(d.BookID);
+            $('#etitle').val(d.Title);
+            $('#eauthor').val(d.Author);
+            $('#image').attr('alt', d.Cover);
+            $('#image').attr('src', `images/${d.Cover}`);
+            $('#egenre').val(d.Genre);
+        }
+
+        function recheck() {
+            if ($('#etitle').val() == '' || $('#eauthor').val() == '' || $('#egenre').val() == '') {
+                swal({
+                    title: "Careful!",
+                    text: "Fill Out The Necessary Fields",
+                    icon: 'warning'
+                });
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function updateBook() {
+            if (recheck()) {
+                let form = new FormData();
+                let id = $('#ID').val();
+                form.append('Title', $('#etitle').val());
+                form.append('Author', $('#eauthor').val());
+                form.append('Genre', $('#egenre').val());
+                form.append('Pic', $('#image').attr('alt'));
+                if ($('#ecover') == '') {
+                    form.append('Cover', undefined);
+                } else {
+                    form.append('Cover', $('#ecover')[0].files[0]);
+                }
+                $.ajax({
+                    type: 'PUT',
+                    url: `/books/updateBook/${id}`,
+                    data: form,
+                    enctype: 'multipart/form-data',
+                    processData: false,
+                    contentType: false,
+                    success: (data, status) => {
+                        setTimeout(() => {
+                            modal.hide();
+                            getBooks();
+                        }, 120);
+                    }
+                });
+            }
+        }
+
+        function deleteRow(id, pic) {
+            $.ajax({
+                type: 'DELETE',
+                url: `/books/delete/${id}/${pic}`,
+                success: (data, status) => {
+                    if (status === 'success') {
+                        setTimeout(() => {
+                            getBooks();
+                        }, 120);
+                    }
+                }
+            });
+        }
+
+        function checkinput() {
+            if ($('#title').val() == '' || $('#author').val() == '' || $('#genre').val() == '' || $('#cover').val() == '') {
+                swal({
+                    title: "Careful!",
+                    text: "Fill Out Every Field",
+                    icon: 'warning'
+                });
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        async function checkBook() {
+            let form = new FormData();
+            if (checkinput()) {
+                form.append('Title', $('#title').val());
+                form.append('Author', $('#author').val());
+                form.append('Genre', $('#genre').val());
+                form.append('Cover', $('#cover')[0].files[0]);
+                $.ajax({
+                    url: '/books/getAll',
+                    type: 'GET',
+                    success: (data, status) => {
+                        if (status === 'success') {
+                            let books = data;
+                            if (books.some(b => { // Title validation
+                                return b.Title == form.Title;
+                            })) {
+                                swal({
+                                    title: "Hold Up!",
+                                    text: "You cannot save the same book twice",
+                                    icon: 'error'
+                                });
+                            } else if (books.some(b => {
+                                return b.Cover == form.get('Cover').name;
+                            })) {
+                                swal({
+                                    title: "Hold Up!",
+                                    text: "You cannot save the same image twice",
+                                    icon: 'error'
+                                });
+                            } else {
+                                addBook(form);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function addBook(form) {
+            $.ajax({
+                type: 'POST',
+                url: '/books/add',
+                data: form,
+                enctype: 'multipart/form-data',
+                processData: false,
+                contentType: false,
+                success: (data, status) => {
+                    if (status === 'success') {
+                        swal({
+                            title: 'Well Done!',
+                            text: 'New Book Added',
+                            icon: 'success'
+                        });
+                        setTimeout(() => {
+                            getBooks();
+                        }, 120);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+#custom{
+    padding: 3%;
+    border: solid 1px black;
+    border-radius: 15px;
+}
+
+#empty{
+    text-align: center;
+    padding: 5%;
+    font-size: 22px;
+    border-radius: 15px;
+}
