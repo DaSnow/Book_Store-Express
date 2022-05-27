@@ -10,10 +10,7 @@ router.get('/getAll', (req, res) => {
       console.log("Failed to load customers");
       throw error;
     }
-    let data = JSON.stringify(result);
-    res.writeHead(200, { 'content-type': 'json' });
-    res.write(data);
-    res.end();
+    res.json(result)
   });
 });
 

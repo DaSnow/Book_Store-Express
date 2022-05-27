@@ -103,7 +103,7 @@
                             <td>${d.Phone}</td>
                             <td>                            
                                 <button type="button" class="btn btn-info" onclick='openModal(${JSON.stringify(d)})'><i class='fas fa-edit'></i></button>
-                                <button type="button" class="btn btn-danger onclick="deleteRow(${d.CustomerID})"><i class='fas fa-trash'></i></button>
+                                <button type="button" class="btn btn-danger" onclick="deleteRow(${d.CustomerID})"><i class='fas fa-trash'></i></button>
                             </td>
                         </tr>`;
             });
@@ -196,7 +196,7 @@
                     type: 'GET',
                     success: (data, status) => {
                         if (status === 'success') {
-                            let books = JSON.parse(data);
+                            let books = data;
                             if (books.some(b => { // Full Name Validation
                                 return b.Name == form.Name;
                             }) && books.some(b => {
@@ -228,6 +228,9 @@
                             text: 'Customer Added',
                             icon: 'success'
                         });
+                        setTimeout(() => {
+                            window.location.href = '/customers';
+                        }, 120);
                     }
                 }
             });

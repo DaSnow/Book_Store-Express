@@ -8,12 +8,7 @@ global.conn = require('./data/server.js');
 var app = express();
 
 conn.connect(error => {
-    if (error) {
-        console.log("Connection failed");
-        throw error;
-    } else {
-        console.log("Database connected");
-    }
+    console.log(!error ? "Database Connected" : "Connection Failed");
 });
 
 app.listen(process.env.PORT || 3000);

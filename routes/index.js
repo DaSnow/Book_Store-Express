@@ -45,7 +45,7 @@ router.post('/add', (req, res) => {
 });
 
 router.put('/update/:id', (req, res) => {
-  conn.query('UPDATE rentals SET ? WHERE RentalID = ?', [req.body, req.params.id], (error, result) => {
+  conn.query('UPDATE rentals SET ? WHERE BookID = ?', [req.body, req.params.id], (error, result) => {
     if (error) {
       console.log("Rental Update failed");
       throw error;
